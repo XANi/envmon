@@ -4,15 +4,25 @@ use std::fs;
 use std::num::ParseIntError;
 use url::Url;
 use std::error;
+
 use crate::drivers::PWM;
 
 pub struct PwmSysfs {
     path: String,
 }
-type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
-pub fn init(url: Url) -> Result<impl PWM> {
-    let pwm = PwmSysfs{ path: url.path().to_string() };
-    print!("path: {:?}", url.path_segments());
+
+pub fn init(url: Url) -> Result<impl PWM,Box<dyn Error>> {
+    let path= url.path().to_string();
+    let split_path: Vec<String> = path.split("/").map(str::to_string).collect();
+    if split_path.len() < 2 {
+       // Err(&format!("too short path: {}",split_path.into()))?
+         Err(format!("too short path(min 3 parts): {:?}", split_path))?
+    }
+    // /sys/devices/platform/it87.2608/hwmon/hwmon3/pwm3
+    print!("{} -> {:?}\n",path,split_path);
+    let host = url.host_str().ok_or("")?;
+    let path = format!("/sys/devices/platform/{}/hwmon/{}/{}",host , split_path[1], split_path[2]);
+    let pwm = PwmSysfs{ path: path };
     return Ok(pwm)
 
 }
@@ -29,8 +39,11 @@ pub fn init(url: Url) -> Result<impl PWM> {
 //
 
 impl PWM for PwmSysfs {
-    fn read(&self) -> std::result::Result<u8, Box<dyn Error>> {
-        let result = fs::read_to_string(self.path.clone())?.parse::<u8>()?;
+    fn read(&self) -> Result<u8, Box<dyn Error>> {
+        let result = fs::read_to_string(self.path.clone())
+            .expect(&format!("file {} can't be opened",self.path.clone()))
+            .trim().parse::<u8>()
+            .expect(&format!("could not parse PWM at {}", self.path));
         return Ok(result);
     }
 

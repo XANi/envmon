@@ -8,8 +8,13 @@ pub trait PWM {
     fn write(&self,pwm: u8) -> Result<(),Box<dyn error::Error>>;
 }
 
-pub fn load() {
-    let pwm1 = pwm::load("sysfs://it87/pwm3");
+pub fn load() -> Result<(), Box<dyn Error>> {
+    let pwm1 = pwm::load("sysfs://it87.2608/hwmon3/pwm3")?;
+    let val = pwm1.read()?;
+    print!("\npwm: {}\n",val);
+    Ok(())
+
+
 
     
 }
