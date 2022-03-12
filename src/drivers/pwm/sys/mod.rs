@@ -13,10 +13,9 @@ pub struct PwmSysfs {
 
 pub fn init(url: Url) -> Result<impl PWM,Box<dyn Error>> {
     let path= url.path().to_string();
-    let split_path: Vec<String> = path.split("/").map(str::to_string).collect();
-    if split_path.len() < 2 {
-       // Err(&format!("too short path: {}",split_path.into()))?
-         Err(format!("too short path(min 3 parts): {:?}", split_path))?
+    let split_path= Vec::from_iter(path.split("/"));
+    if split_path.len() < 3 {
+         Err(format!("too short path(min 2 parts): {:?}", split_path))?
     }
     // /sys/devices/platform/it87.2608/hwmon/hwmon3/pwm3
     print!("{} -> {:?}\n",path,split_path);
