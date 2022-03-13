@@ -4,7 +4,7 @@ extern crate derive_more;
 use derive_more::{Add, Display, From, Into,FromStr};
 mod pwm;
 mod temp;
-
+use anyhow::{Context, Result};
 
 // temp in thousands of kelvin
 
@@ -26,8 +26,8 @@ impl fmt::Display for TempMiliK {
 
 
 pub trait PWM {
-    fn read(&self) -> Result<u8, Box<dyn error::Error>>;
-    fn write(&self,pwm: u8) -> Result<(),Box<dyn error::Error>>;
+    fn read(&self) -> Result<u8>;
+    fn write(&self,pwm: u8) -> Result<()>;
 }
 pub trait Temp {
     fn read(&self) -> Result<TempMiliK, Box<dyn Error>>;

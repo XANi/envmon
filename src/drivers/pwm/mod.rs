@@ -1,9 +1,8 @@
 use std::error;
 use url::Url;
 use crate::drivers::PWM;
-
+use anyhow::{bail, Context, Result};
 pub mod sys;
-type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 pub fn load(url: &str)  -> Result<Box<dyn PWM>>{
     let url = Url::parse(url)?;
     match url.scheme() {
@@ -11,9 +10,8 @@ pub fn load(url: &str)  -> Result<Box<dyn PWM>>{
             return  Ok(Box::new(sys::init(url)?));
         }
         _ => {
-            return Err(format!("plugin [{}] not supported", url.scheme()).into())
+            bail!("plugin [{}] not supported", url.scheme());
         }
 
     }
-
 }
