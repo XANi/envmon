@@ -5,7 +5,7 @@ use std::num::ParseIntError;
 use url::Url;
 use std::error;
 
-use crate::drivers::Temp;
+use crate::drivers::{Temp, TempMiliK};
 
 pub struct TempSysfs {
     path: String,
@@ -53,11 +53,12 @@ pub fn init(url: Url) -> Result<impl Temp,Box<dyn Error>> {
 //
 
 impl Temp for TempSysfs {
-    fn read(&self) -> Result<u32, Box<dyn Error>> {
-        let result = fs::read_to_string(self.path.clone())
+    fn read(&self) -> Result<TempMiliK, Box<dyn Error>> {
+        let mut res32 = fs::read_to_string(self.path.clone())
             .expect(&format!("file {} can't be opened",self.path.clone()))
-            .trim().parse::<u32>()
-            .expect(&format!("could not parse PWM at {}", self.path));
+            .trim().parse::<i32>()
+            .expect(&format!("could not parse temp at {}", self.path));
+        let result = TempMiliK((u32::try_from(res32 + 273150))? as u32);
         return Ok(result);
     }
 
