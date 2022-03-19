@@ -2,4 +2,13 @@
 pwm_drivers:
     fan1: sysfs://it87.2608/hwmon3/pwm1
 temperature_sensors:
-    cpu1: sensors://temp1
+    cpu1: sysfs://coretemp.0/hwmon2/temp1
+    nvme1: sysfs://nvme0n1/hwmon1/temp1
+speed_sensors:
+    fan1: sysfs://coretemp.0/hwmon2/fan1
+sensor_map:
+    cpu1:
+        pwm: fan1
+        min: 45.1
+        max: 60
+

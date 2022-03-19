@@ -16,6 +16,9 @@ pub fn init(url: Url) -> Result<impl Temp,Box<dyn Error>> {
     let split_path= Vec::from_iter(path.split("/"));
     let host = url.host_str().ok_or("")?;
     let path: String;
+    if split_path.len() < 3 {
+         Err(format!("too short path(min 2 parts): {:?}", split_path))?
+    }
     if host.starts_with("nvme") {
         // /sys/block/nvme0n1/device/hwmon1/temp1_input
         path = format!(
@@ -31,10 +34,6 @@ pub fn init(url: Url) -> Result<impl Temp,Box<dyn Error>> {
             split_path[1],
             split_path[2]);
     }
-    if split_path.len() < 3 {
-         Err(format!("too short path(min 2 parts): {:?}", split_path))?
-    }
-    print!("{} -> {:?}\n",path,split_path);
 
     let pwm = TempSysfs{ path: path };
     return Ok(pwm)

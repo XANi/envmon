@@ -21,7 +21,6 @@ pub fn init(url: Url) -> Result<impl PWM> {
          bail!("too short path(min 2 parts): {:?}", split_path);
     }
     // /sys/devices/platform/it87.2608/hwmon/hwmon3/pwm3
-    print!("{} -> {:?}\n",path,split_path);
     let host = url.host_str().context("missing host")?;
     let ctrl_path = format!("/sys/devices/platform/{}/hwmon/{}/{}",host , split_path[1], split_path[2]);
     let enable_path = format!("/sys/devices/platform/{}/hwmon/{}/{}_enable",host , split_path[1], split_path[2]);

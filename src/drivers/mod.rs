@@ -2,8 +2,10 @@ use std::error::Error;
 use std::{error, fmt};
 extern crate derive_more;
 use derive_more::{Add, Display, From, Into,FromStr};
-mod pwm;
-mod temp;
+pub mod pwm;
+pub mod temp;
+pub mod speed;
+
 use anyhow::{Context, Result};
 
 // temp in thousands of kelvin
@@ -23,6 +25,12 @@ impl fmt::Display for TempMiliK {
         //write!(f, "{}", (self.0 as f32)/1000.0)
     }
 }
+impl From<TempMiliK> for f32 {
+    fn from(temp: TempMiliK) -> Self {
+        return (temp.0 as f32) / 1000.0
+    }
+}
+
 
 
 pub trait PWM {
@@ -33,7 +41,7 @@ pub trait Temp {
     fn read(&self) -> Result<TempMiliK, Box<dyn Error>>;
 }
 pub trait Speed {
-    fn read(&self) -> Result<u32, Box<dyn Error>>;
+    fn read(&self) -> Result<u32>;
 }
 pub fn load() -> Result<(), Box<dyn Error>> {
     let pwm1 = pwm::load("sysfs://it87.2608/hwmon3/pwm3").unwrap();
