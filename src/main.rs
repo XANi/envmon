@@ -7,7 +7,7 @@ use clap::Parser;
 use crate::drivers::PWM;
 use crate::drivers::Temp;
 use crate::drivers::Speed;
-
+use std::{thread, time::Duration};
 mod config;
 mod drivers;
 use anyhow::*;
@@ -51,8 +51,14 @@ fn main() {
             .expect(&format!("could not load speed driver from[{}]",speed.1.clone()));
         speed_drivers.insert(speed.0.to_string(), speed_driver);
     }
-
-
-    drivers::load().unwrap();
+    while 1 == 1 {
+        for temp in temp_drivers.iter() {
+            println!("{} : {}", temp.0, temp.1.read().expect("can't read sensor"))
+        }
+        for speed in speed_drivers.iter() {
+            println!("{} : {}", speed.0, speed.1.read().expect("can't read sensor"))
+        }
+        thread::sleep(Duration::from_millis(4000));
+    }
     println!("{:#?}",config);
 }

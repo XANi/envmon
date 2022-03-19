@@ -38,19 +38,8 @@ pub trait PWM {
     fn write(&self,pwm: u8) -> Result<()>;
 }
 pub trait Temp {
-    fn read(&self) -> Result<TempMiliK, Box<dyn Error>>;
+    fn read(&self) -> Result<TempMiliK>;
 }
 pub trait Speed {
     fn read(&self) -> Result<u32>;
 }
-pub fn load() -> Result<(), Box<dyn Error>> {
-    let pwm1 = pwm::load("sysfs://it87.2608/hwmon3/pwm3").unwrap();
-    let temp1 = temp::load("sysfs://nvme0n1/hwmon1/temp1")?;
-    let val = pwm1.read()?;
-    let val2 = temp1.read()?;
-    print!("\npwm: {}\n",val);
-    print!("\ntemp: {}\n",val2);
-    Ok(())
-
-}
-

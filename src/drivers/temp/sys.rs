@@ -4,20 +4,21 @@ use std::fs;
 use std::num::ParseIntError;
 use url::Url;
 use std::error;
-
+use std::path::Path;
+use anyhow::*;
 use crate::drivers::{Temp, TempMiliK};
 
 pub struct TempSysfs {
     path: String,
 }
 
-pub fn init(url: Url) -> Result<impl Temp,Box<dyn Error>> {
+pub fn init(url: Url) -> Result<impl Temp> {
     let path= url.path().to_string();
     let split_path= Vec::from_iter(path.split("/"));
-    let host = url.host_str().ok_or("")?;
+    let host = url.host_str().context("missing host")?;
     let path: String;
     if split_path.len() < 3 {
-         Err(format!("too short path(min 2 parts): {:?}", split_path))?
+         bail!("too short path(min 2 parts): {:?}", split_path);
     }
     if host.starts_with("nvme") {
         // /sys/block/nvme0n1/device/hwmon1/temp1_input
@@ -34,7 +35,9 @@ pub fn init(url: Url) -> Result<impl Temp,Box<dyn Error>> {
             split_path[1],
             split_path[2]);
     }
-
+    if ! Path::new(&path).exists() {
+        bail!("path {} does not exist", path)
+    }
     let pwm = TempSysfs{ path: path };
     return Ok(pwm)
 
@@ -52,7 +55,7 @@ pub fn init(url: Url) -> Result<impl Temp,Box<dyn Error>> {
 //
 
 impl Temp for TempSysfs {
-    fn read(&self) -> Result<TempMiliK, Box<dyn Error>> {
+    fn read(&self) -> Result<TempMiliK> {
         let mut res32 = fs::read_to_string(self.path.clone())
             .expect(&format!("file {} can't be opened",self.path.clone()))
             .trim().parse::<i32>()

@@ -4,7 +4,7 @@ use std::fs;
 use std::num::ParseIntError;
 use url::Url;
 use std::error;
-
+use std::path::Path;
 use crate::drivers::Speed;
 use anyhow::*;
 pub struct SpeedSysfs {
@@ -20,7 +20,10 @@ pub fn init(url: Url) -> Result<impl Speed> {
     // /sys/devices/platform/it87.2608/hwmon/hwmon3/Speed3
     let host = url.host_str().context("no host part in url")?;
     // /sys/devices/platform/it87.2608/hwmon/hwmon3/fan1_input
-    let path = format!("/sys/devices/platform/{}/hwmon/{}/{}",host , split_path[1], split_path[2]);
+    let path = format!("/sys/devices/platform/{}/hwmon/{}/{}_input",host , split_path[1], split_path[2]);
+    if ! Path::new(&path).exists() {
+        bail!("path {} does not exist", path)
+    }
     let speed = SpeedSysfs{ path: path };
     return Ok(speed)
 

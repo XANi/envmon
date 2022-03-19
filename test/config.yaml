@@ -5,7 +5,7 @@ temperature_sensors:
     cpu1: sysfs://coretemp.0/hwmon2/temp1
     nvme1: sysfs://nvme0n1/hwmon1/temp1
 speed_sensors:
-    fan1: sysfs://coretemp.0/hwmon2/fan1
+    fan1: sysfs://it87.2608/hwmon3/fan1
 sensor_map:
     cpu1:
         pwm: fan1
