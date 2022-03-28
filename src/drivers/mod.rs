@@ -36,6 +36,7 @@ impl From<TempMiliK> for f32 {
 pub trait PWM {
     fn read(&self) -> Result<u8>;
     fn write(&self,pwm: u8) -> Result<()>;
+    fn cleanup(&self);
 }
 pub trait Temp {
     fn read(&self) -> Result<TempMiliK>;

@@ -3,8 +3,12 @@ use std::fs;
 use std::num::ParseIntError;
 use url::Url;
 use std::error;
+use std::thread;
 use anyhow::{anyhow,bail, Context, Result};
+use signal_hook::*;
+use signal_hook::iterator::Signals;
 use crate::drivers::PWM;
+
 
 pub struct PwmSysfs {
     ctrl_path: String,
@@ -31,16 +35,32 @@ pub fn init(url: Url) -> Result<impl PWM> {
     // even tho it is not writeable when in auto mode
     let ctrl_old = fs::read_to_string(ctrl_path.clone())
         .expect(&format!("can't open {}", ctrl_path.clone()));
+    //
     fs::write(enable_path.clone(),"1")
         .expect(&format!("can't write to {}", enable_path.clone()));
     fs::write(ctrl_path.clone(),"255")
         .expect(&format!("can't write to {}", ctrl_path.clone()));
     let pwm = PwmSysfs{
-        ctrl_path: ctrl_path,
-        ctrl_old: ctrl_old,
-        enable_path: enable_path,
-        enable_old: enable_old
+        ctrl_path: ctrl_path.clone(),
+        ctrl_old: ctrl_old.clone(),
+        enable_path: enable_path.clone(),
+        enable_old: enable_old.clone()
     };
+    let mut signals = Signals::new(        signal_hook::consts::TERM_SIGNALS)
+        .expect("couldn't get signals");
+    let _ = thread::Builder::new().name(format!("envmon {} fence", split_path[2])).spawn(move || {
+        println!("in thread");
+        for sig in signals.forever() {
+            println!("restoring PWM {} to {}", ctrl_path.clone(),ctrl_old.clone());
+            println!("restoring control mode {} to {}", enable_path.clone(),enable_old.clone());
+            // just in case for whatever reason it was set on manual before start, we set fans to max speed
+            let _ = fs::write(ctrl_path.clone(),ctrl_old.clone());
+            let _ = fs::write(enable_path.clone(),enable_old.clone());
+            return;
+        }
+    });
+
+
     return Ok(pwm)
 
 }
@@ -67,6 +87,14 @@ impl PWM for PwmSysfs {
 
     fn write(&self, pwm: u8) -> Result<()> {
         return Ok(())
+    }
+    fn cleanup(&self) {
+        println!("restoring PWM {} to {}", self.ctrl_path.clone(),self.ctrl_old.clone());
+        println!("restoring control mode {} to {}", self.enable_path.clone(),self.enable_old.clone());
+        // just in case for whatever reason it was set on manual before start, we set fans to max speed
+        let _ = fs::write(self.ctrl_path.clone(),self.ctrl_old.clone());
+        let _ = fs::write(self.enable_path.clone(),self.enable_old.clone());
+
     }
 }
 // best effort to set PWM to its old value
